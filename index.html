@@ -6,7 +6,7 @@
     <meta name="theme-color" id="meta-theme-color" content="#FF9800">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" id="meta-apple-status" content="#FF9800">
-    <title>BehaviorCheck</title>
+    <title>BehaviorCheck Pocket</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root { 
@@ -224,29 +224,32 @@
 </div>
 
 <div id="screen-edit-student" class="screen">
-    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;">
-        <div class="input-group">
-            <label>Nome do Aluno</label>
-            <input type="text" id="edit-stu-name">
-        </div>
-        <div class="input-group">
-            <label>Nome do Responsável (Mãe/Pai)</label>
-            <input type="text" id="edit-stu-mother" placeholder="Ex: Maria">
-        </div>
-        <div class="input-group">
-            <label>WhatsApp (com DDD)</label>
-            <input type="tel" id="edit-stu-whatsapp" placeholder="Ex: 79 99999-9999" oninput="mascaraTelefone(this)">
-        </div>
-    </div>
-
-    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-        <h3 style="margin-top:0; font-size:1.1rem; color:var(--primary-dark); margin-bottom:15px;">Regras Ativas</h3>
-        <div id="student-rules-toggles">
+    <div style="flex: 1; padding-bottom: 40px;">
+        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <div class="input-group">
+                <label>Nome do Aluno</label>
+                <input type="text" id="edit-stu-name">
             </div>
-    </div>
+            <div class="input-group">
+                <label>Nome do Responsável (Mãe/Pai)</label>
+                <input type="text" id="edit-stu-mother" placeholder="Ex: Maria">
+            </div>
+            <div class="input-group">
+                <label>WhatsApp (com DDD)</label>
+                <input type="tel" id="edit-stu-whatsapp" placeholder="Ex: 79 99999-9999" oninput="mascaraTelefone(this)">
+            </div>
+        </div>
 
-    <button class="btn-action" onclick="salvarEdicaoAluno()"><span class="material-icons">save</span> SALVAR DADOS</button>
-    <div style="height: 30px;"></div>
+        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <h3 style="margin-top:0; font-size:1.1rem; color:var(--primary-dark); margin-bottom:15px;">Regras Ativas para este Aluno</h3>
+            <div id="student-rules-toggles">
+                </div>
+        </div>
+
+        <button class="btn-action btn-success" onclick="salvarEdicaoAluno()">
+            <span class="material-icons">save</span> SALVAR ALTERAÇÕES
+        </button>
+    </div>
 </div>
 
 
@@ -406,6 +409,7 @@
         const homeIcons = document.getElementById('home-icons');
         const stuIcons = document.getElementById('student-icons');
         const fab = document.getElementById('fab-add-student');
+        const helpIcon = document.getElementById('header-help-icon');
 
         if(screenId === 'home') {
             document.getElementById('screen-home').classList.add('active');
@@ -470,7 +474,7 @@
         localStorage.setItem('bcpocket_help_seen', 'true');
     }
 
-    // --- CUSTOM DIALOGS ---
+    // --- CUSTOM DIALOGS NATIVOS DO APP ---
     function customAlert(msg, title = "Aviso", icon = "info") {
         document.getElementById('dialog-title').innerText = title;
         document.getElementById('dialog-message').innerText = msg;
@@ -481,14 +485,13 @@
         const btnOk = document.getElementById('dialog-btn-confirm');
         btnOk.innerText = "OK";
         btnOk.className = "btn-action";
-        btnOk.removeAttribute('href'); // Garante que não é link
+        btnOk.removeAttribute('href'); 
         btnOk.removeAttribute('target');
         
         btnOk.onclick = fecharDialogo;
         document.getElementById('custom-dialog').style.display = 'flex';
     }
 
-    // Agora o Confirm aceita uma URL para injetar no botão
     function customConfirm(msg, onConfirm, title = "Atenção", isDanger = false, linkUrl = null) {
         document.getElementById('dialog-title').innerText = title;
         document.getElementById('dialog-message').innerText = msg;
@@ -501,7 +504,6 @@
         btnOk.innerText = isDanger ? "SIM, APAGAR" : "CONFIRMAR";
         btnOk.className = isDanger ? "btn-action btn-danger" : "btn-action";
         
-        // Se houver uma URL, transforma o botão em um link de verdade
         if (linkUrl) {
             btnOk.href = linkUrl;
             btnOk.target = "_blank";
@@ -682,7 +684,11 @@
     function salvarEdicaoAluno() {
         const stu = db.students.find(s => s.id === currentStudentId);
         const name = document.getElementById('edit-stu-name').value.trim().toUpperCase();
-        if(!name) { customAlert("O nome não pode ficar vazio."); return; }
+        
+        if(!name) { 
+            customAlert("O nome não pode ficar vazio."); 
+            return; 
+        }
         
         stu.name = name;
         stu.motherName = document.getElementById('edit-stu-mother').value.trim();
@@ -691,7 +697,9 @@
         stu.inactiveRules = [];
         db.rules.forEach(r => {
             const chk = document.getElementById(`toggle-rule-${r.id}`);
-            if(chk && !chk.checked) stu.inactiveRules.push(r.id);
+            if(chk && !chk.checked) {
+                stu.inactiveRules.push(r.id);
+            }
         });
 
         save();
@@ -732,10 +740,9 @@
             msg += (db.config.reportGoodMsg || defaultGoodMsg) + "\n";
         }
 
-        // Gera a URL real do zap
+        // PROTOCOLO WHATSAPP:// PARA ABRIR O APP NATIVO
         let url = `whatsapp://send?phone=55${cleanPhone}&text=${encodeURIComponent(msg)}`;
-
-        // Passa a URL como 5º parâmetro para o modal customizado
+        
         customConfirm(`Relatório pronto. Deseja abrir o WhatsApp agora e zerar os dados de hoje para este aluno?`, () => {
             stu.counts = {};
             save();
@@ -782,7 +789,6 @@
         container.innerHTML = html;
         fecharModais();
         
-        // Pequeno delay para garantir que o modal fechou e a DOM está pronta
         setTimeout(() => {
             window.print();
         }, 300);
